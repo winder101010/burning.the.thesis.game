@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>卒論ゲーム</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body { text-align:center; font-size:22px; font-family: sans-serif; padding:10px; }
+  #percent { font-size:42px; font-weight:bold; }
+  #time { font-size:28px; }
+  .btn { font-size:32px; margin:10px; padding:15px 30px; border-radius:16px; border:none; }
+  .maru { background:#4CAF50; color:white; }
+  .batsu { background:#f44336; color:white; }
+  .start { background:#2196F3; color:white; }
+  @media (max-width: 600px){
+    .btn { width:40%; font-size:28px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>卒論を100％にしろ！</h1>
+
+<p id="message">スタートを押してください</p>
+<p>進行度：<span id="percent">0</span>%</p>
+<p>残り時間：<span id="time">30</span> 秒</p>
+
+<button class="btn maru" onclick="press('maru')">〇</button>
+<button class="btn batsu" onclick="press('batsu')">×</button>
+<br>
+<button class="btn start" onclick="start()">スタート</button>
+
+<!-- 🔊 音声ファイル -->
+<!-- ↓好きな音声ファイルに差し替えてください -->
+<audio id="soundMaru" src="maru.mp3" preload="auto"></audio>
+<audio id="soundBatsu" src="batsu.mp3" preload="auto"></audio>
+<!-- 音源魔王魂を使用しています。 -->
+
+<script>
+let percent = 0;
+let time = 30;
+let timer = null;
+let current = "";
+
+const soundMaru = document.getElementById("soundMaru");
+const soundBatsu = document.getElementById("soundBatsu");
+
+function playSound(audio){
+  audio.currentTime = 0; // 連続で鳴らしても最初から再生
+  audio.play().catch(()=>{});
+}
+
+function start(){
+  percent = 0;
+  time = 30;
+  document.getElementById("percent").innerText = percent;
+  document.getElementById("time").innerText = time;
+  nextMessage();
+
+  if(timer) clearInterval(timer);
+  timer = setInterval(()=>{
+    time--;
+    document.getElementById("time").innerText = time;
+    if(time <= 0){
+      clearInterval(timer);
+      endGame("時間切れ！結果：" + percent + "%");
+    }
+  },1000);
+}
+
+function nextMessage(){
+  // 🔥 80% 進める / 20% 燃やす
+  current = Math.random() < 0.8 ? "進める" : "燃やす";
+  document.getElementById("message").innerText =
+    "卒論を" + (current === "進める" ? "進める" : "燃やす");
+}
+
+function press(btn){
+  if(current === "") return;
+
+  if(btn === "maru") {
+    playSound(soundMaru);   // 〇の音
+  } else {
+    playSound(soundBatsu);  // ×の音
+  }
+
+  if(current === "進める" && btn === "maru"){
+    percent += 2;
+    if(percent >= 100){
+      endGame("100％達成！クリア！");
+      return;
+    }
+    document.getElementById("percent").innerText = percent;
+    nextMessage();
+  }
+  else if(current === "燃やす" && btn === "maru"){
+    endGame("卒論を燃やしてしまった！ゲームオーバー");
+  }
+  else{
+    nextMessage(); // 表示だけ更新
+  }
+}
+
+function endGame(msg){
+  clearInterval(timer);
+  current = "";
+  document.getElementById("message").innerText = msg;
+}
+</script>
+
+</body>
+</html>
